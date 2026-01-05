@@ -1,0 +1,5 @@
+{
+  "name": "Wyckoff AI Analyst",
+  "description": "A professional-grade Wyckoff Analysis tool powered by Gemini 3 Pro. Upload stock data to receive an automated market structure analysis, phase identification, and interactive charting in the persona of Richard D. Wyckoff.",
+  "requestFramePermissions": []
+}

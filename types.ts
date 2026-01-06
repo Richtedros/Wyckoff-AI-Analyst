@@ -117,5 +117,5 @@ export interface CsvParseResult {
 }
 
 export type Language = 'en' | 'cn';
-export type Market = 'US' | 'CN' | 'FR';
+export type Market = 'US' | 'CN' | 'EU';
 export type Interval = '1d' | '1wk' | '1mo';

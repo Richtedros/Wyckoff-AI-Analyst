@@ -53,8 +53,11 @@ function formatTickerForMarket(ticker: string, market: Market): string {
     return cleanTicker;
   }
 
-  if (market === 'FR') {
-    return `${cleanTicker}.PA`;
+  if (market === 'EU') {
+    // For Europe, because suffixes vary widely (.DE, .PA, .AS, .L), 
+    // we don't append a default suffix if the user manually types a code without one.
+    // We rely on the search dropdown to provide the correct suffixed ticker.
+    return cleanTicker;
   }
 
   if (market === 'CN') {
@@ -121,8 +124,11 @@ export async function searchSymbols(query: string, market: Market): Promise<Sear
             if (!q.symbol) return false;
             
             // Basic filtering logic based on market preference
-            if (market === 'FR') {
-                return q.exchange === 'PAR' || q.symbol.endsWith('.PA') || q.symbol.endsWith('.NX');
+            if (market === 'EU') {
+                const euSuffixes = ['.PA', '.DE', '.L', '.AS', '.MI', '.MC', '.SW', '.ST', '.OL', '.CO', '.HE', '.LS', '.BR', '.VI', '.IR'];
+                const euExchanges = ['PAR', 'GER', 'LSE', 'AMS', 'MIL', 'MAD', 'SWX', 'STO', 'OSL', 'CPH', 'HEL', 'VIE', 'LIS', 'BRU', 'ISE'];
+                // Check exchange code OR suffix
+                return (q.exchange && euExchanges.includes(q.exchange)) || euSuffixes.some(s => q.symbol.endsWith(s));
             }
             if (market === 'CN') {
                 return q.symbol.endsWith('.SS') || q.symbol.endsWith('.SZ') || q.exchange === 'SHH' || q.exchange === 'SHZ';
@@ -160,7 +166,7 @@ export async function fetchStockData(symbol: string, market: Market = 'US', inte
     if (!result) {
       let errorMsg = `Symbol '${formattedSymbol}' not found.`;
       if (market === 'CN') errorMsg += ` Try code (e.g. 600519).`;
-      if (market === 'FR') errorMsg += ` Try name (e.g. LVMH).`;
+      if (market === 'EU') errorMsg += ` Try name (e.g. ASML, SAP).`;
       throw new Error(errorMsg);
     }
 

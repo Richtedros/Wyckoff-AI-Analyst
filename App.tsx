@@ -29,7 +29,7 @@ const translations = {
     subtitle: "Institutional Grade Market Structure Analysis",
     placeholderUS: "Search Company (e.g. Nvidia) or Ticker",
     placeholderCN: "Search Code (e.g. 600519) or Name",
-    placeholderFR: "Search Company (e.g. LVMH) or Ticker",
+    placeholderEU: "Search Company (e.g. ASML, SAP) or Ticker",
     analyze: "Analyze",
     poweredBy: "Powered by Gemini 3 Pro & Yahoo Finance Data.",
     startOver: "Start Over",
@@ -67,7 +67,7 @@ const translations = {
     markets: {
       US: "US Market",
       CN: "China A-Shares",
-      FR: "France (Euronext)"
+      EU: "Europe Market"
     },
     intervals: {
       daily: "Daily (1D)",
@@ -98,7 +98,7 @@ const translations = {
     subtitle: "机构级市场结构分析工具",
     placeholderUS: "搜索公司 (如: Nvidia) 或代码",
     placeholderCN: "搜索代码 (如: 600519) 或名称",
-    placeholderFR: "搜索公司 (如: LVMH) 或代码",
+    placeholderEU: "搜索公司 (如: ASML, SAP) 或代码",
     analyze: "开始分析",
     poweredBy: "由 Gemini 3 Pro 和 Yahoo Finance 提供支持。",
     startOver: "重新开始",
@@ -136,7 +136,7 @@ const translations = {
     markets: {
       US: "美股市场 (US)",
       CN: "中国 A 股 (CN)",
-      FR: "法国股市 (France)"
+      EU: "欧洲市场 (Europe)"
     },
     intervals: {
       daily: "日线 (1D)",
@@ -179,13 +179,13 @@ const POPULAR_STOCKS = {
     { label: "比亚迪 (002594)", value: "002594.SZ" },
     { label: "上证指数 (000001.SS)", value: "000001.SS" },
   ],
-  FR: [
+  EU: [
+    { label: "ASML (ASML.AS)", value: "ASML.AS" },
+    { label: "SAP (SAP.DE)", value: "SAP.DE" },
     { label: "LVMH (MC.PA)", value: "MC.PA" },
-    { label: "Soitec (SOI.PA)", value: "SOI.PA" },
-    { label: "L'Oréal (OR.PA)", value: "OR.PA" },
-    { label: "TotalEnergies (TTE.PA)", value: "TTE.PA" },
-    { label: "Sanofi (SAN.PA)", value: "SAN.PA" },
-    { label: "Airbus (AIR.PA)", value: "AIR.PA" },
+    { label: "Novo Nordisk (NOVO-B.CO)", value: "NOVO-B.CO" },
+    { label: "Ferrari (RACE.MI)", value: "RACE.MI" },
+    { label: "AstraZeneca (AZN.L)", value: "AZN.L" },
   ]
 };
 
@@ -230,6 +230,8 @@ const getCurrencySymbol = (currency: string) => {
     if (currency === 'EUR') return '€';
     if (currency === 'CNY') return '¥';
     if (currency === 'USD') return '$';
+    if (currency === 'GBP') return '£';
+    if (currency === 'CHF') return '₣';
     return currency;
 };
 
@@ -296,7 +298,7 @@ export default function App() {
     }
 
     if (market === 'CN') setLanguage('cn');
-    if (market === 'US' || market === 'FR') setLanguage('en');
+    if (market === 'US' || market === 'EU') setLanguage('en');
 
     // Load History
     try {
@@ -484,7 +486,7 @@ export default function App() {
   const getPlaceholder = () => {
       if (market === 'US') return t.placeholderUS;
       if (market === 'CN') return t.placeholderCN;
-      if (market === 'FR') return t.placeholderFR;
+      if (market === 'EU') return t.placeholderEU;
       return t.placeholderUS;
   };
 
@@ -563,7 +565,7 @@ export default function App() {
                             >
                                 <option value="US">{t.markets.US}</option>
                                 <option value="CN">{t.markets.CN}</option>
-                                <option value="FR">{t.markets.FR}</option>
+                                <option value="EU">{t.markets.EU}</option>
                             </select>
                             <Globe className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         </div>

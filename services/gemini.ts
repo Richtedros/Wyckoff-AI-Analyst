@@ -1,10 +1,13 @@
+
 import { GoogleGenAI, Type, Schema } from "@google/genai";
-import { SYSTEM_PROMPTS, GEMINI_MODEL } from "../constants";
+import { SYSTEM_PROMPTS, DEFAULT_MODEL } from "../constants";
 import { AnalysisResult, StockDataPoint } from "../types";
 
 export const analyzeStockData = async (
   data: StockDataPoint[],
-  userApiKey?: string // Made optional
+  userApiKey?: string,
+  context?: { costBasis?: number },
+  modelId: string = DEFAULT_MODEL
 ): Promise<AnalysisResult> => {
   // 1. Try User Key, 2. Try System Env Key
   const finalApiKey = userApiKey || process.env.API_KEY;
@@ -17,6 +20,7 @@ export const analyzeStockData = async (
 
   // Use the last 400 candles for analysis context
   const slicedData = data.slice(-400); 
+  const lastPrice = slicedData[slicedData.length - 1].close;
   
   const csvString = [
     "Date,Open,High,Low,Close,Volume,MA50,MA200,VWAP",
@@ -26,12 +30,49 @@ export const analyzeStockData = async (
     ),
   ].join("\n");
 
-  const prompt = `
+  let prompt = `
     Here is the market data CSV for the asset. 
     Perform the Wyckoff Analysis.
     
     CSV DATA:
     ${csvString}
+  `;
+
+  // Inject Cost Basis Context if provided
+  if (context && context.costBasis) {
+      const pnl = ((lastPrice - context.costBasis) / context.costBasis) * 100;
+      prompt += `
+      
+      **USER PORTFOLIO CONTEXT:**
+      - **Cost Basis:** ${context.costBasis.toFixed(2)}
+      - **Current Price:** ${lastPrice.toFixed(2)}
+      - **Current P&L:** ${pnl.toFixed(2)}%
+      
+      **YOUR TASK: CUSTOMIZED ADVICE**
+      The user OWNS this stock. Do not act like they are flat.
+      
+      1.  **If P&L is HUGE (> +30%):** 
+          - Do NOT recommend "ADD" if price is extended. Suggest "HOLD" or "Trailing Stop".
+          - Only "ADD" if it's a perfect pyramid point (Backup).
+          - *Example:* If user bought TTD at 38 and it's now 100, do not say "Buy". Say "Hold Trend".
+          
+      2.  **If P&L is NEGATIVE:**
+          - Do NOT suggest "Add" to average down unless a Phase C Spring is confirmed.
+          - Focus on "Structural Support" survival.
+      `;
+  } else {
+      // General Search Context (No Position yet)
+      prompt += `
+      **USER STRATEGY: NEW ENTRY SNIPER**
+      - **Phase C Entry:** Only buy if the Stop Loss is tight (High R/R).
+      - **Rule:** If Risk/Reward < 2.5, Recommendation = "WAIT".
+      `;
+  }
+
+  prompt += `
+  **TARGET INSTRUCTIONS:**
+  - Calculate targets using **Confluence** (Range Depth + Structure + Fibs).
+  - Return the target text in BOTH English and Chinese.
   `;
 
   // Define Schema for Structured JSON Output (Bilingual)
@@ -72,11 +113,19 @@ export const analyzeStockData = async (
               recommendation: bilingualTextSchema,
               entryZone: { type: Type.STRING },
               stopLoss: { type: Type.STRING },
-              priceTargets: { type: Type.STRING }
+              priceTargets: bilingualTextSchema, // UPDATED to Object
+              expectedDuration: bilingualTextSchema,
+              positionManagement: {
+                  type: Type.OBJECT,
+                  properties: {
+                      action: { type: Type.STRING, enum: ['Buy', 'Add', 'Hold', 'Trim', 'Sell', 'Stop Loss', 'Wait'] },
+                      reasoning: bilingualTextSchema
+                  },
+                  required: ["action", "reasoning"]
+              }
           },
-          required: ["recommendation", "entryZone", "stopLoss", "priceTargets"]
+          required: ["recommendation", "entryZone", "stopLoss", "priceTargets", "expectedDuration"]
       },
-      // NEW CONVICTION SECTION WITH SUB-SCORES
       tradeConviction: {
         type: Type.OBJECT,
         properties: {
@@ -130,7 +179,7 @@ export const analyzeStockData = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
+      model: modelId,
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_PROMPTS.universal,

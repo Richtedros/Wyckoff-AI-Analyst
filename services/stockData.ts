@@ -1,3 +1,4 @@
+
 import { StockDataPoint, Market, Interval, StockFetchResult, SearchResult } from '../types';
 
 /**
@@ -73,6 +74,8 @@ function formatTickerForMarket(ticker: string, market: Market): string {
 
 function getRangeForInterval(interval: Interval): string {
     switch(interval) {
+        case '15m': return '60d';
+        case '1h': return '730d'; // 2 years
         case '1d': return '2y';
         case '1wk': return '5y';
         case '1mo': return '10y';
@@ -85,17 +88,27 @@ function getRangeForInterval(interval: Interval): string {
  * This is crucial for frontend-only apps hitting Yahoo Finance.
  */
 async function fetchWithFallback(targetUrl: string): Promise<any> {
+  const encodedUrl = encodeURIComponent(targetUrl);
+
   // Primary: corsproxy.io (fastest)
   // Secondary: allorigins.win (reliable fallback)
   const proxies = [
-    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
+    `https://corsproxy.io/?${encodedUrl}`,
+    `https://api.allorigins.win/raw?url=${encodedUrl}`
   ];
 
   let lastError;
   for (const proxy of proxies) {
     try {
-      const res = await fetch(proxy);
+      // Use 'no-store' to ensure we get fresh data and avoid browser/proxy caching
+      const res = await fetch(proxy, { 
+        cache: 'no-store',
+        headers: {
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache'
+        }
+      });
+      
       if (res.ok) {
         return await res.json();
       }
@@ -107,7 +120,7 @@ async function fetchWithFallback(targetUrl: string): Promise<any> {
       lastError = e;
     }
   }
-  throw lastError || new Error("All proxies failed to fetch data.");
+  throw lastError || new Error("All proxies failed to fetch data. Please try again later.");
 }
 
 export async function searchSymbols(query: string, market: Market): Promise<SearchResult[]> {
@@ -157,12 +170,22 @@ export async function fetchStockData(symbol: string, market: Market = 'US', inte
   const formattedSymbol = formatTickerForMarket(symbol, market);
   const range = getRangeForInterval(interval);
 
-  const targetUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${formattedSymbol}?interval=${interval}&range=${range}`;
+  // 1. Prepare requests: Quote (Real-time Price) and Chart (History)
+  const quoteUrl = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(formattedSymbol)}`;
+  const chartUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${formattedSymbol}?interval=${interval}&range=${range}&includePrePost=true`;
   
+  // 2. Fetch in parallel
+  const quotePromise = fetchWithFallback(quoteUrl).catch(e => {
+      console.warn("Quote fetch failed", e);
+      return null;
+  });
+  const chartPromise = fetchWithFallback(chartUrl);
+
   try {
-    const json = await fetchWithFallback(targetUrl);
-    const result = json.chart?.result?.[0];
+    const [quoteJson, chartJson] = await Promise.all([quotePromise, chartPromise]);
     
+    // 3. Handle Chart Data (Required)
+    const result = chartJson.chart?.result?.[0];
     if (!result) {
       let errorMsg = `Symbol '${formattedSymbol}' not found.`;
       if (market === 'CN') errorMsg += ` Try code (e.g. 600519).`;
@@ -179,13 +202,20 @@ export async function fetchStockData(symbol: string, market: Market = 'US', inte
     }
     
     const data: StockDataPoint[] = [];
+    const isIntraday = interval.includes('m') || interval.includes('h');
     
     for (let i = 0; i < timestamps.length; i++) {
       const close = quote.close[i];
       if (close === null || close === undefined) continue; 
       
       const dateObj = new Date(timestamps[i] * 1000);
-      const dateStr = dateObj.toISOString().split('T')[0];
+      let dateStr;
+      
+      if (isIntraday) {
+          dateStr = dateObj.toISOString().replace('T', ' ').substring(0, 16);
+      } else {
+          dateStr = dateObj.toISOString().split('T')[0];
+      }
       
       data.push({
         date: dateStr,
@@ -202,6 +232,24 @@ export async function fetchStockData(symbol: string, market: Market = 'US', inte
     calculateSMA(data, 200);
     calculateVWAP(data);
     
+    // 4. Determine Best Available Current Price
+    // Default to last candle close (which might be delayed 15-20mins for free API)
+    let finalPrice = data.length > 0 ? data[data.length - 1].close : meta.regularMarketPrice;
+
+    // Override with Quote data if available (Real-time / Extended Hours)
+    if (quoteJson && quoteJson.quoteResponse?.result?.[0]) {
+        const q = quoteJson.quoteResponse.result[0];
+        // Logic: If Pre-Market or Post-Market active, use those prices. Else Regular.
+        if (q.marketState === 'PRE' && q.preMarketPrice) {
+            finalPrice = q.preMarketPrice;
+        } else if (['POST', 'CLOSED', 'POSTPOST'].includes(q.marketState) && q.postMarketPrice) {
+            finalPrice = q.postMarketPrice;
+        } else {
+            // During Regular session, regularMarketPrice is usually fresher than Chart candle
+            finalPrice = q.regularMarketPrice || finalPrice;
+        }
+    }
+
     // Construct simplified metadata object
     const stockMetadata = {
         symbol: meta.symbol,
@@ -209,7 +257,7 @@ export async function fetchStockData(symbol: string, market: Market = 'US', inte
         longName: meta.longName || meta.shortName || meta.symbol,
         currency: meta.currency,
         exchangeName: meta.fullExchangeName,
-        price: meta.regularMarketPrice
+        price: finalPrice // Best available price
     };
 
     return { data, meta: stockMetadata };
@@ -218,4 +266,52 @@ export async function fetchStockData(symbol: string, market: Market = 'US', inte
     console.error("Stock Fetch Error:", error);
     throw new Error(error.message || "Failed to fetch stock data");
   }
+}
+
+/**
+ * Fetches real-time quotes for multiple symbols in one request.
+ * Extremely efficient for watchlists.
+ */
+export async function fetchBatchQuotes(symbols: string[], marketMap: Record<string, Market>): Promise<Record<string, number>> {
+    if (symbols.length === 0) return {};
+
+    // Format all tickers
+    const formattedSymbols = symbols.map(s => formatTickerForMarket(s, marketMap[s]));
+    const uniqueSymbols = Array.from(new Set(formattedSymbols));
+    
+    const targetUrl = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(uniqueSymbols.join(','))}`;
+
+    try {
+        const json = await fetchWithFallback(targetUrl);
+        const results = json.quoteResponse?.result || [];
+        
+        const priceMap: Record<string, number> = {};
+        
+        results.forEach((q: any) => {
+            let price = q.regularMarketPrice;
+            
+            // Apply Extended Hours Logic
+            if (q.marketState === 'PRE' && q.preMarketPrice) {
+                price = q.preMarketPrice;
+            } else if (['POST', 'CLOSED', 'POSTPOST'].includes(q.marketState) && q.postMarketPrice) {
+                price = q.postMarketPrice;
+            }
+            
+            // Map back to the input symbol (we need to match the original symbol stored in watchlist)
+            // This is tricky because Yahoo returns "NVDA" but we might have stored "NVDA" or "NVDA.US"
+            // We'll map by checking which input symbol generated this Yahoo symbol.
+            
+            // Simple reverse lookup strategy:
+            // Find which original symbol formats to this yahoo symbol
+            const originalSymbol = symbols.find(s => formatTickerForMarket(s, marketMap[s]) === q.symbol);
+            if (originalSymbol) {
+                priceMap[originalSymbol] = price;
+            }
+        });
+        
+        return priceMap;
+    } catch (e) {
+        console.error("Batch quote fetch failed", e);
+        return {};
+    }
 }

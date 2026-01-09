@@ -1,3 +1,4 @@
+
 export interface StockDataPoint {
   date: string;
   open: number;
@@ -34,6 +35,30 @@ export interface HistoryItem {
   score: number;
   direction: 'Long' | 'Short' | 'Neutral';
   timestamp: number;
+}
+
+export interface WatchlistItem {
+  id: string;
+  symbol: string;
+  market: Market;
+  costBasis: number;
+  addedAt: number;
+  currency?: string;
+  currentPrice?: number;
+  isLoading?: boolean; // For batch updates
+  lastAnalysis?: {
+    score: number;
+    direction: 'Long' | 'Short' | 'Neutral';
+    recommendation: BilingualText;
+    target: BilingualText; // CHANGED: Now supports bilingual
+    stopLoss: string;
+    entryZone: string; // NEW: Explicit entry zone storage
+    timestamp: number;
+    phase: string;
+    // New fields for personalized advice
+    action?: string; 
+    managementAdvice?: BilingualText;
+  };
 }
 
 export interface StockFetchResult {
@@ -74,11 +99,19 @@ export interface DetailedAnalysis {
   trendStructure: BilingualText; // Analysis of market structure (HH/HL)
 }
 
+export interface PositionManagement {
+  action: 'Buy' | 'Add' | 'Hold' | 'Trim' | 'Sell' | 'Stop Loss' | 'Wait';
+  reasoning: BilingualText;
+}
+
 export interface TradeSetup {
-  recommendation: BilingualText; // "Long Bias", "Short Bias", "Wait"
+  recommendation: BilingualText; // General market recommendation
   entryZone: string;
   stopLoss: string;
-  priceTargets: string;
+  priceTargets: BilingualText; // CHANGED: Now supports bilingual
+  expectedDuration: BilingualText; 
+  // NEW: Personalized advice based on cost basis
+  positionManagement?: PositionManagement; 
 }
 
 export interface KeyLevels {
@@ -116,6 +149,13 @@ export interface CsvParseResult {
   error?: string;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+  timestamp: number;
+  image?: string; // Base64 string for displaying uploaded images
+}
+
 export type Language = 'en' | 'cn';
 export type Market = 'US' | 'CN' | 'EU';
-export type Interval = '1d' | '1wk' | '1mo';
+export type Interval = '15m' | '1h' | '1d' | '1wk' | '1mo';

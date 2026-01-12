@@ -32,22 +32,29 @@ const INITIAL_WATCHLIST: WatchlistItem[] = [
   { id: 'nvo', symbol: 'NVO', market: 'US', costBasis: 49.06, currency: 'USD', addedAt: Date.now() },
   { id: 'ttd', symbol: 'TTD', market: 'US', costBasis: 38.52, currency: 'USD', addedAt: Date.now() },
   { id: 'omda', symbol: 'OMDA', market: 'US', costBasis: 15.54, currency: 'USD', addedAt: Date.now() },
-  { id: 'smci', symbol: 'SMCI', market: 'US', costBasis: 30.18, currency: 'USD', addedAt: Date.now() },
   { id: 'mstr', symbol: 'MSTR', market: 'US', costBasis: 156.69, currency: 'USD', addedAt: Date.now() },
   { id: 'onwd', symbol: 'ONWD.BR', market: 'EU', costBasis: 4.42, currency: 'EUR', addedAt: Date.now() },
   { id: 'soi', symbol: 'SOI.PA', market: 'EU', costBasis: 25.61, currency: 'EUR', addedAt: Date.now() },
   
   // Watchlist (Momentum / Observation) - Cost Basis 0
-  { id: 'abcl', symbol: 'ABCL', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'clpt', symbol: 'CLPT', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'axti', symbol: 'AXTI', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'ses', symbol: 'SES', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'root', symbol: 'ROOT', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'spir', symbol: 'SPIR', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'onds', symbol: 'ONDS', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'oust', symbol: 'OUST', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'dlo', symbol: 'DLO', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
-  { id: 'sei', symbol: 'SEI', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'smr', symbol: 'SMR', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'oklo', symbol: 'OKLO', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'iren', symbol: 'IREN', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'rr', symbol: 'RR', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'nxt', symbol: 'NXT', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'plug', symbol: 'PLUG', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'eose', symbol: 'EOSE', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'clsk', symbol: 'CLSK', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'joby', symbol: 'JOBY', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'smci_w', symbol: 'SMCI', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'nbis', symbol: 'NBIS', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'hims', symbol: 'HIMS', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'usar', symbol: 'USAR', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'ionq', symbol: 'IONQ', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'rgti', symbol: 'RGTI', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'qubt', symbol: 'QUBT', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'achr', symbol: 'ACHR', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
+  { id: 'rklb', symbol: 'RKLB', market: 'US', costBasis: 0, currency: 'USD', addedAt: Date.now() },
 ];
 
 // --- UI Translation Dictionary ---
@@ -155,6 +162,117 @@ const translations = {
         trim: "TRIM / TAKE PROFIT",
         stop: "STOP LOSS ALERT",
         wait: "WAIT"
+    },
+    chat: {
+      title: "Consult Richard Wyckoff",
+      placeholder: "Ask or paste image (Ctrl+V)...",
+      send: "Send",
+      welcome: "I have analyzed the tape. What questions do you have about this structure?"
+    }
+  },
+  cn: {
+    title: "威科夫 AI 分析师",
+    subtitle: "机构级市场结构分析工具",
+    placeholderUS: "搜索公司 (如: Nvidia) 或代码",
+    placeholderCN: "搜索代码 (如: 600519) 或名称",
+    placeholderEU: "搜索公司 (如: ASML, SAP) 或代码",
+    analyze: "深度分析 (Pro)",
+    poweredBy: "由 Gemini 3 Pro 和 Yahoo Finance 提供支持。",
+    startOver: "重新开始",
+    marketEventsLog: "市场事件日志",
+    loadingAnalysis: "正在咨询理查德·威科夫 (Pro 模型)... 正在计算概率...",
+    fetching: "正在获取数据：",
+    chart: "图表",
+    errorAnalysis: "分析失败",
+    tryAgain: "重试",
+    vwap: "成交量加权平均价",
+    accumulation: "吸筹",
+    distribution: "派发",
+    conviction: "交易确信度",
+    convictionDesc: "多因子综合评分",
+    futureOutlook: "未来展望",
+    currentAnalysis: "执行摘要",
+    marketSelect: "市场选择",
+    quickPick: "热门精选...",
+    phase: "当前阶段",
+    volume: "量价分析",
+    trend: "趋势结构",
+    setup: "交易计划",
+    keyLevels: "关键点位",
+    support: "支撑",
+    resistance: "阻力",
+    entry: "入场",
+    stop: "止损",
+    target: "目标",
+    duration: "预计耗时",
+    glossary: "威科夫术语表",
+    factors: {
+        quality: "形态质量 (胜率)",
+        risk: "盈亏比 (赔率)",
+        maturity: "阶段成熟度 (时机)"
+    },
+    markets: {
+      US: "美股市场 (US)",
+      CN: "中国 A 股 (CN)",
+      EU: "欧洲市场 (Europe)"
+    },
+    intervals: {
+      min15: "15 分钟 (短线)",
+      hour1: "1 小时 (波段)",
+      daily: "日线 (1D)",
+      weekly: "周线 (1W)",
+      monthly: "月线 (1M)"
+    },
+    apiKeyRequired: "需要 API Key",
+    freeMode: "免费模式",
+    proMode: "专业模式 (自定义 Key)",
+    enterKey: "输入自定义 Google Gemini API Key (可选)",
+    enterKeyDesc: "注意：免费层级配额很低。为了避免 '429 配额耗尽' 错误，请使用绑定了计费结算 (Pay-as-you-go) 的 Google Cloud 项目 Key。",
+    getKey: "获取 Key (Google AI Studio)",
+    saveKey: "保存 Key",
+    keySaved: "API Key 已保存",
+    settings: "设置",
+    modelSelection: "分析模型 (单次搜索)",
+    socialCard: "生成闪卡",
+    generatingSocial: "正在生成卡片...",
+    downloadCard: "下载图片",
+    changeKey: "更换 Key",
+    quotaExceeded: "API 配额已耗尽 (429)。模型繁忙或 Key 达到限制。请在设置中输入付费项目 Key 或稍后再试。",
+    historyTitle: "高分机会雷达",
+    historyDesc: "您的历史高确信度机会 (本地保存)",
+    clearHistory: "清空",
+    noHistory: "暂无分析记录。",
+    tabSearch: "新分析 (Pro)",
+    tabPortfolio: "持仓 (Portfolio)",
+    tabWatchlist: "自选 (Watchlist)",
+    addToWatchlist: "加入列表",
+    removeFromWatchlist: "移除",
+    costBasis: "持仓成本",
+    currentPrice: "现价",
+    pnl: "盈亏 %",
+    status: "形态状态",
+    action: "操作建议",
+    lastUpdated: "上次更新",
+    emptyWatchlist: "列表为空。",
+    addCost: "设置成本",
+    updateAnalysis: "更新",
+    updateAll: "Flash 极速扫描",
+    portfolio: "持仓 (Portfolio)",
+    watching: "观察 (Watchlist)",
+    addAsset: "添加资产",
+    addSymbol: "输入代码",
+    editCost: "修改持仓成本",
+    save: "保存",
+    cancel: "取消",
+    symbol: "代码 (Symbol)",
+    market: "市场",
+    actionAdvice: {
+        buy: "买入 / 加仓",
+        sell: "卖出 / 离场",
+        hold: "持有 (Hold)",
+        trim: "减仓 (Trim)",
+        stop: "止损预警",
+        wait: "观望"
     },
     chat: {
       title: "与威科夫对话",
@@ -534,7 +652,7 @@ export default function App() {
   const [status, setStatus] = useState<string>(''); 
   const [language, setLanguage] = useState<Language>('en');
   const [market, setMarket] = useState<Market>('US');
-  const [interval, setInterval] = useState<Interval>('1d');
+  const [interval, setChartInterval] = useState<Interval>('1d');
   
   // Search Autocomplete State
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -1186,12 +1304,20 @@ export default function App() {
                                     </>
                                   ) : (
                                     <>
-                                        <span className="text-rose-500/80 block text-xs mb-1 font-bold">
-                                            {t.stop}
+                                        <span className="text-emerald-500/80 block text-xs mb-1 font-bold">
+                                            {t.target}
                                         </span>
-                                        <span className="font-mono text-rose-300 font-medium">
-                                            {item.lastAnalysis?.stopLoss || '-'}
+                                        <span className="font-mono text-emerald-300 font-medium">
+                                            {item.lastAnalysis?.target 
+                                                ? (typeof item.lastAnalysis.target === 'string' ? item.lastAnalysis.target : item.lastAnalysis.target[language]) 
+                                                : '-'}
                                         </span>
+                                        <div className="mt-1 flex items-center gap-1 opacity-80">
+                                            <span className="text-[10px] text-rose-400 font-bold">{t.stop}:</span>
+                                            <span className="text-[10px] text-rose-300 font-mono">
+                                                {item.lastAnalysis?.stopLoss || '-'}
+                                            </span>
+                                        </div>
                                     </>
                                   )}
                               </div>
@@ -1350,7 +1476,7 @@ export default function App() {
                             <div className="relative">
                                 <select 
                                     value={interval}
-                                    onChange={(e) => setInterval(e.target.value as Interval)}
+                                    onChange={(e) => setChartInterval(e.target.value as Interval)}
                                     className="appearance-none bg-slate-800 border border-slate-700 text-white pl-4 pr-10 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-medium w-full md:w-auto cursor-pointer hover:bg-slate-750 transition-colors"
                                 >
                                     <option value="15m">{t.intervals.min15}</option>
